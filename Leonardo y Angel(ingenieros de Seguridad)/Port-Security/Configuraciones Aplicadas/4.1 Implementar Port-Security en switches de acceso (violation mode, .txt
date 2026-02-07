@@ -1,0 +1,80 @@
+SW3
+
+enable
+configure terminal
+interface range e0/0, e0/1
+switchport mode access
+switchport port-security
+switchport port-security maximum 2
+switchport port-security mac-address sticky
+switchport port-security violation restrict
+
+-------------------------------------------------------------------------------------------
+SW4
+
+enable
+configure terminal
+interface range e0/0, e0/1
+switchport mode access
+switchport port-security
+switchport port-security maximum 2
+switchport port-security mac-address sticky
+switchport port-security violation restrict
+
+---------------------------------------------------------------------------------------------
+SW5
+
+enable
+configure terminal
+interface range e0/0, e0/1
+switchport mode access
+switchport port-security
+switchport port-security maximum 2
+switchport port-security mac-address sticky
+switchport port-security violation restrict
+
+-----------------------------------------------------------------------------------------------
+SW6
+
+enable
+configure terminal
+interface range e0/0, e0/1, e0/2
+switchport mode access
+switchport port-security
+switchport port-security maximum 2
+switchport port-security mac-address sticky
+switchport port-security violation restrict
+
+------------------------------------------------------------------------------------------------
+SW9 
+
+enable
+configure terminal
+interface range e0/0, e0/1, e0/2, e1/0, e0/3
+switchport mode access
+switchport port-security
+switchport port-security maximum 2
+switchport port-security mac-address sticky
+switchport port-security violation restrict
+
+-------------------------------------------------------------------------------------------------
+SW7
+
+enable
+configure terminal
+interface range e0/0, e0/1, e0/2, e0/3, e1/0  
+switchport mode access
+switchport port-security
+switchport port-security maximum 2
+switchport port-security mac-address sticky
+Sswitchport port-security violation restrict
+
+--------------------------------------------------------------------------------------------------
+SW8
+
+interface range e0/0 , e0/1, e0/2
+switchport mode access
+switchport port-security
+switchport port-security maximum 2
+switchport port-security mac-address sticky
+switchport port-security violation restrict

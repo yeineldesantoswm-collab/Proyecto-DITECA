@@ -1,0 +1,64 @@
+Implementar protección contra ataques de VLAN hopping (DTP, Native 
+VLAN, pruning). 
+
+
+SW3
+
+enable
+configure terminal
+interface range e0/0 , e0/1
+switchport mode access
+switchport nonegotiate
+---------------------------------------------------------------------------------------------------
+SW4
+
+enable
+configure terminal
+interface range e0/0 , e0/1
+switchport mode access
+switchport nonegotiate
+
+---------------------------------------------------------------------------------------------------
+SW5
+
+enable
+configure terminal
+interface range e0/0 , e0/1
+switchport mode access
+switchport nonegotiate
+
+-----------------------------------------------------------------------------------------------------
+SW6
+
+enable
+configure terminal
+interface range e0/0 , e0/1, e0/2
+switchport mode access
+switchport nonegotiate
+
+-----------------------------------------------------------------------------------------------------
+SW9
+
+enable
+configure terminal
+interface range e0/0, e0/1, e0/2 , e0/3, e1/0
+switchport mode access
+switchport nonegotiate
+
+-----------------------------------------------------------------------------------------------------
+SW7
+
+enable
+configure terminal
+interface range e0/0 , e0/1, e0/2, e0/3
+switchport mode access
+switchport nonegotiate
+
+------------------------------------------------------------------------------------------------------
+SW8
+
+enable
+configure terminal
+interface range e0/0 , e0/1, e0/2
+switchport mode access
+switchport nonegotiate

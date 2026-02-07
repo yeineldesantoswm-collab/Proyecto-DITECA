@@ -1,0 +1,83 @@
+SW3 - DAI
+
+enable
+configure terminal
+ip arp inspection vlan 10,20,30
+interface e0/0
+ip arp inspection limit rate 15
+interface e0/1
+ip arp inspection limit rate 15
+
+SW4 - DAI
+
+enable
+configure terminal
+ip arp inspection vlan 10,20,30
+interface e0/0
+ip arp inspection limit rate 15
+interface e0/1
+ip arp inspection limit rate 15
+
+SW5 - DAI
+
+enable
+configure terminal
+ip arp inspection vlan 10,20,30
+interface e0/0
+ip arp inspection limit rate 15
+interface e0/1
+ip arp inspection limit rate 15
+
+SW7 - DAI
+
+enable
+configure terminal
+ip arp inspection vlan 60,70
+interface e0/2
+ip arp inspection trust
+interface e3/0
+ip arp inspection trust
+interface e0/0
+ip arp inspection limit rate 15
+interface e0/1
+ip arp inspection limit rate 15
+
+SW8 - DAI
+
+enable
+configure terminal
+ip arp inspection vlan 60,70
+interface e0/2
+ip arp inspection trust
+interface e0/0
+ip arp inspection limit rate 15
+interface e0/1
+ip arp inspection limit rate 15
+
+SW6 - DAI
+
+enable
+configure terminal
+ip arp inspection vlan 40,50
+interface e0/2
+ip arp inspection trust
+interface e0/0
+ip arp inspection limit rate 15
+interface e0/1
+ip arp inspection limit rate 15
+
+SW9 - DAI
+
+enable
+configure terminal
+ip arp inspection vlan 40,50
+interface e0/0
+ip arp inspection trust
+interface e0/1
+ip arp inspection trust
+interface e0/2
+ip arp inspection trust
+interface e0/3
+ip arp inspection trust
+interface e1/0
+ip arp inspection trust

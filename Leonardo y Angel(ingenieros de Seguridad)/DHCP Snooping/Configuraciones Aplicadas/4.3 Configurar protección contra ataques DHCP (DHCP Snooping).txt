@@ -1,0 +1,136 @@
+
+R-SW1 - DHCP SNOOPING
+
+enable
+configure terminal
+ip dhcp snooping
+ip dhcp snooping vlan 10,20,30
+ip dhcp snooping database flash:dhcp_snoop.db
+interface e0/1
+ip dhcp snooping trust
+interface e0/0
+ip dhcp snooping trust
+interface e0/2
+ip dhcp snooping trust
+interface e0/3
+ip dhcp snooping trust
+interface e1/0
+ip dhcp snooping trust
+interface e1/1
+ip dhcp snooping trust
+interface e1/2
+ip dhcp snooping trust
+
+R-SW2 - DHCP SNOOPING
+
+enable
+configure terminal
+ip dhcp snooping
+ip dhcp snooping vlan 40,50,60,70
+ip dhcp snooping database flash:dhcp_snoop.db
+interface e0/0
+ip dhcp snooping trust
+interface e0/1
+ip dhcp snooping trust
+interface e0/2
+ip dhcp snooping trust
+interface e0/3
+ip dhcp snooping trust
+interface e1/0
+ip dhcp snooping trust
+interface e1/1
+ip dhcp snooping trust
+interface e1/2
+ip dhcp snooping trust
+
+SW9 - DHCP SNOOPING
+
+enable
+configure terminal
+ip dhcp snooping
+ip dhcp snooping vlan 40,50
+interface e0/1
+ip dhcp snooping trust
+interface e0/2
+ip dhcp snooping trust
+interface e0/3
+ip dhcp snooping trust
+interface e1/0
+ip dhcp snooping trust
+interface e0/0
+ip dhcp snooping trust
+
+SW6 - DHCP SNOOPING
+
+enable
+configure terminal
+ip dhcp snooping
+ip dhcp snooping vlan 40,50
+interface e0/2
+ip dhcp snooping trust
+interface e0/0
+ip dhcp snooping limit rate 5
+interface e0/1
+ip dhcp snooping limit rate 5
+
+SW3 - DHCP SNOOPING
+
+enable
+configure terminal
+ip dhcp snooping
+ip dhcp snooping vlan 10,20,30
+interface e0/0
+ip dhcp snooping limit rate 5
+interface e0/1
+ip dhcp snooping limit rate 5
+
+SW4 - DHCP SNOOPING
+
+enable
+configure terminal
+ip dhcp snooping
+ip dhcp snooping vlan 10,20,30
+interface e0/0
+ip dhcp snooping limit rate 5
+interface e0/1
+ip dhcp snooping limit rate 5
+
+SW5 - DHCP SNOOPING
+
+enable
+configure terminal
+ip dhcp snooping
+ip dhcp snooping vlan 10,20,30
+interface e0/0
+ip dhcp snooping limit rate 5
+interface e0/1
+ip dhcp snooping limit rate 5
+
+SW7 - DHCP SNOOPING
+
+enable
+configure terminal
+ip dhcp snooping
+ip dhcp snooping vlan 60,70
+interface e0/2
+ip dhcp snooping trust
+interface e0/3
+ip dhcp snooping trust
+interface e0/0
+ip dhcp snooping limit rate 5
+interface e0/1
+ip dhcp snooping limit rate 5
+
+SW8 - DHCP SNOOPING
+
+enable
+configure terminal
+ip dhcp snooping
+ip dhcp snooping vlan 60,70
+interface e0/2
+ip dhcp snooping trust
+interface e0/0
+ip dhcp snooping limit rate 5
+interface e0/1
+ip dhcp snooping limit rate 5
+

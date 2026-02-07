@@ -1,0 +1,86 @@
+SW3 – Protección STP
+
+enable
+configure terminal
+interface e0/0
+spanning-tree bpduguard enable
+interface e0/1
+spanning-tree bpduguard enable
+
+========================================================================================
+SW4 – Protección STP
+
+enable
+configure terminal
+interface e0/0
+spanning-tree bpduguard enable
+interface e0/1
+spanning-tree bpduguard enable
+
+
+========================================================================================
+SW5 – Protección STP
+
+enable
+configure terminal
+interface e0/0
+spanning-tree bpduguard enable
+interface e0/1
+spanning-tree bpduguard enable
+
+
+========================================================================================
+SW7 – Protección STP
+
+enable
+configure terminal
+interface e0/0
+spanning-tree bpduguard enable
+interface e0/1
+spanning-tree bpduguard enable
+interface e0/2
+spanning-tree bpduguard enable
+interface e0/3
+spanning-tree bpduguard enable
+
+========================================================================================
+SW8 – Protección STP
+
+enable
+configure terminal
+interface e0/0
+spanning-tree bpduguard enable
+interface e0/1
+spanning-tree bpduguard enable
+interface e0/2
+spanning-tree bpduguard enable
+
+========================================================================================
+SW6 – Protección STP
+
+enable
+configure terminal
+interface e0/0
+spanning-tree bpduguard enable
+interface e0/1
+spanning-tree bpduguard enable
+interface e0/2
+spanning-tree bpduguard enable
+
+========================================================================================
+SW9 – Protección STP
+
+enable
+configure terminal
+interface e0/2
+spanning-tree bpduguard enable
+interface e0/0
+spanning-tree bpduguard enable
+interface e0/1
+spanning-tree bpduguard enable
+interface e1/0
+spanning-tree bpduguard enable
+interface e0/3
+spanning-tree bpduguard enable
+
+=========================================================================================

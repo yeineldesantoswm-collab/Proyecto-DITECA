@@ -1,0 +1,184 @@
+ACL 2 – FILTRO DE TRÁFICO CORPORATIVO (APLICADO EN SWITCHES L3)
+Objetivo: permitir solo servicios corporativos (HTTP/HTTPS/DNS/MAIL/SSH/RDP/VPN/RADIUS) y bloquear P2P, torrents, streaming comunes.
+
+Definición de ACL CORPORATE-FILTER
+
+(Aplicar en todos los sw capa 3)
+
+enable
+configure terminal
+ip access-list extended CORPORATE-FILTER
+remark ---- PERMITIR SERVICIOS CORPORATIVOS ----
+permit tcp any any eq 80
+permit tcp any any eq 443
+permit udp any any eq 53
+permit tcp any any eq 53
+permit tcp any any eq 25
+permit tcp any any eq 110
+permit tcp any any eq 143
+permit tcp any any eq 587
+permit tcp any any eq 993
+permit tcp any any eq 995
+permit tcp any any eq 22
+permit tcp any any eq 3389
+permit udp any any eq 500
+permit udp any any eq 4500
+permit udp any any range 1812 1813
+remark ---- BLOQUEAR BITTORRENT ----
+deny tcp any any range 6881 6999
+deny udp any any range 6881 6999
+remark ---- BLOQUEAR STREAMING/TYPICAL P2P PORTS ----
+deny tcp any any eq 1935
+deny tcp any any eq 8080
+deny tcp any any eq 8888
+deny tcp any any eq 554
+remark ---- BLOQUEAR OTROS TRÁFICOS FRÍVOLAS ----
+deny tcp any any eq 3074
+deny udp any any eq 3074
+remark ---- PERMITIR TODO LO DEMÁS (POLÍTICA PERMIT BY DEFAULT) ----
+permit ip any any
+
+Aplicar CORPORATE-FILTER en las SVIs de las VLANs 10,20,30 en cada switch L3:
+(Repite en cada switch que tenga SVI: R-SW1, R-SW2, SW6)
+
+R-SW1
+
+enable
+configure terminal
+interface Vlan10
+ip access-group CORPORATE-FILTER in
+interface Vlan20
+ip access-group CORPORATE-FILTER in
+interface Vlan30
+ip access-group CORPORATE-FILTER in
+
+R-SW2
+
+enable
+configure terminal
+interface Vlan10
+ip access-group CORPORATE-FILTER in
+interface Vlan20
+ip access-group CORPORATE-FILTER in
+interface Vlan30
+ip access-group CORPORATE-FILTER in
+
+SW6
+
+enable
+configure terminal
+interface Vlan10
+ip access-group CORPORATE-FILTER in
+interface Vlan20
+ip access-group CORPORATE-FILTER in
+interface Vlan30
+ip access-group CORPORATE-FILTER in
+
+
+-----------------------------------------------------------
+ACL 3 – PROTECCIÓN ICMP (APLICADO EN SWITCHES L3)
+Objetivo: permitir ping desde dentro, bloquear echo-reply/otros desde Internet (inbound), y bloquear tipos ICMP peligrosos.
+
+enable
+configure terminal
+ip access-list extended ICMP-PROTECT
+remark ---- BLOQUEAR ECHO-REPLY DESDE INTERNET ----
+deny icmp any any echo-reply
+permit icmp any any echo
+permit ip any any
+
+Aplicar ICMP-PROTECT en todas las SVIs (R-SW1, R-SW2, SW6)
+
+R-SW1
+
+enable
+configure terminal
+interface Vlan10
+ip access-group ICMP-PROTECT in
+interface Vlan20
+ip access-group ICMP-PROTECT in
+interface Vlan30
+ip access-group ICMP-PROTECT in
+
+R-SW2
+
+enable
+configure terminal
+interface Vlan10
+ip access-group ICMP-PROTECT in
+interface Vlan20
+ip access-group ICMP-PROTECT in
+interface Vlan30
+ip access-group ICMP-PROTECT in
+
+SW6
+
+enable
+configure terminal
+interface Vlan10
+ip access-group ICMP-PROTECT in
+interface Vlan20
+ip access-group ICMP-PROTECT in
+interface Vlan30
+ip access-group ICMP-PROTECT in
+
+------------------------------------------------------------
+
+ACL 4 – ANTI-DoS BÁSICA (APLICADO EN SWITCHES L3)
+Objetivo: bloquear paquetes fragmentados, tráfico con flags TCP anómalos y limitar tipos básicos.
+
+enable
+configure terminal
+ip access-list extended ANTIDOS
+remark ---- BLOQUEAR TRÁFICO CON PORTS COMUNES DE ATAQUE ----
+deny tcp any any eq 0
+remark ---- PERMITIR RUTINA NORMAL ----
+permit ip any any
+
+Aplicar ANTIDOS en las SVIs (R-SW1, R-SW2, SW6)
+
+R-SW1
+
+enable
+configure terminal
+interface Vlan10
+ip access-group ANTIDOS in
+interface Vlan20
+ip access-group ANTIDOS in
+interface Vlan30
+ip access-group ANTIDOS in
+
+R-SW2
+
+enable
+configure terminal
+interface Vlan10
+ip access-group ANTIDOS in
+interface Vlan20
+ip access-group ANTIDOS in
+interface Vlan30
+ip access-group ANTIDOS in
+
+SW6
+
+enable
+configure terminal
+interface Vlan10
+ip access-group ANTIDOS in
+interface Vlan20
+ip access-group ANTIDOS in
+interface Vlan30
+ip access-group ANTIDOS in
+
+
+------------------------------------------------------------
+VERIFICACIÓN (comandos para capturar evidencias)
+
+show access-lists
+show ip access-lists
+show run interface Vlan10
+show ip interface brief
+show logging
+show ip access-lists CORPORATE-FILTER
+show ip access-lists ICMP-PROTECT
+show ip access-lists ANTIDOS
