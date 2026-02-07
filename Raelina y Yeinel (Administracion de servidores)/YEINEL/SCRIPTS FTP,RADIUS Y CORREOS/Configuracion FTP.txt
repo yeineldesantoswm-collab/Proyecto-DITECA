@@ -1,0 +1,141 @@
+Servidor Ftp (Seguir los comandos en orden)  (Maquina Bridge)
+sudo apt update && sudo apt upgrade -y
+sudo apt install vsftpd -y
+systemctl status vsftpd (comprobar el servicio)
+(en caso de que salga desactivado: sudo systemctl enable --now vsftpd)
+
+--------
+Entrar al archivo de configuracion:
+sudo nano /etc/vsftpd.conf
+#Modifique las lineas que aparezcan aqui de esta manera:
+listen=YES
+listen_ipv6=NO
+anonymous_enable=NO
+local_enable=YES
+write_enable=YES
+local_umask=022
+ftpd_banner=Bienvenido al servidor FTP.(Opcional)
+
+Antes de salir del archivo, pegaremos los siguientes comandos en el final del archivo de configuracion para indicarle los puertos correctos al archivo y que el pasv sea habilitado)
+pasv_enable=YES
+pasv_min_port=40000
+pasv_max_port=40100
+pasv_address=(IP DEL SERVIDOR)
+
+
+(Salir y guardar  archivo)
+sudo systemctl restart vsftpd
+systemctl status vsftpd
+
+-------------
+Crear usuario de Ftp
+
+sudo adduser ftpuser
+
+---------------
+Darle permiso a sus carpetas
+----------------
+sudo mkdir -p /home/ftpuser/ftp
+sudo chown ftpuser:ftpuser /home/ftpuser/ftp
+
+----------------------
+Configurar Firewall para permitir el puerto Ftp
+----------------------
+sudo ufw enable
+sudo ufw allow 21/tcp
+sudo ufw status (Para comprobar)
+sudo ufw allow 20/tcp
+sudo ufw allow 40000:40100/tcp
+sudo ufw reload
+
+
+(comando para validad: ss -tlnp | grep :21 , Si no aparece nada, seguir los siguientes pasos
+sudo grep -q '^allow_writeable_chroot=' /etc/vsftpd.conf || echo 'allow_writeable_chroot=YES' | sudo tee -a /etc/vsftpd.conf
+sudo mkdir -p /var/run/vsftpd
+sudo touch /var/run/vsftpd/empty
+sudo chown root:root /var/run/vsftpd /var/run/vsftpd/empty
+sudo chmod 755 /var/run/vsftpd /var/run/vsftpd/empty
+sudo apt update && sudo apt install -y dos2unix
+sudo dos2unix /etc/vsftpd.conf
+sudo systemctl daemon-reload
+sudo systemctl restart vsftpd
+sudo systemctl status vsftpd --no-pager -l
+
+Añadimos todos estos comandos para un troubleshoot intensivo, dando permisos y haciendo configuraciones completas de manera rapida dentro del sistema)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+------------------------------------------------------------------------------------------------------------------
+
+
+CONFIGURACION DIRECTA
+
+------------------------------------------------------------------------------------------------------------------
+
+
+1. Instalación y habilitación del servidor FTP
+sudo apt update
+sudo apt install vsftpd
+sudo systemctl enable vsftpd
+sudo systemctl start vsftpd
+sudo systemctl status vsftpd
+
+2. Verificación del servicio escuchando en el puerto 21
+sudo ss -tlnp | grep :21
+
+3. Abrir puerto FTP en firewall (si se usa UFW)
+sudo ufw allow 21/tcp
+sudo ufw allow 20/tcp
+sudo ufw allow 40000:50000/tcp
+sudo ufw reload
+
+4. Comprobación y uso de usuario local
+
+
+sudo usermod -aG sudo (usuario de preferencioa)
+
+
+5. Modificaciones realizadas en el archivo de configuración
+
+Archivo editado:
+
+sudo nano /etc/vsftpd.conf
+
+
+Las siguientes líneas fueron activadas o agregadas en tu configuración final funcional:
+
+write_enable=YES
+local_enable=YES
+local_umask=022
+chroot_local_user=YES
+allow_writeable_chroot=YES
+user_sub_token=$USER
+local_root=/home/$USER/ftp
+
+pasv_enable=YES
+pasv_min_port=40000
+pasv_max_port=50000
+pasv_address=TU_IP_PUBLICA_O_LOCAL (ej: 192.168.1.15)
+
+
+reiniciO del servicio:
+
+sudo systemctl restart vsftpd
+
+6. Pruebas de conexión
+
+Conexión interna desde la misma máquina:
+
+ftp 192.168.1.15

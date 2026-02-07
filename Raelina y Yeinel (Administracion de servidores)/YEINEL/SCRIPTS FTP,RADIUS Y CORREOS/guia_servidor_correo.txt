@@ -1,0 +1,157 @@
+
+GUÍA DEFINITIVA: INSTALACIÓN COMPLETA DE SERVIDOR DE CORREO (Postfix + Dovecot)
+EN UBUNTU 24.04.2 — FUNCIONAL AL 100% EN RED LOCAL
+Nombre base del servidor usado: mail.midominio.local
+Cuenta usada para pruebas: prueba / Windows731
+Formato de buzón: Maildir
+
+======================================================================
+1. **ACTUALIZAR EL SISTEMA**
+======================================================================
+sudo apt update && sudo apt upgrade -y
+
+======================================================================
+2. **INSTALAR POSTFIX Y DOVECOT**
+======================================================================
+sudo apt install postfix dovecot-core dovecot-imapd dovecot-pop3d -y
+
+Durante la instalación:
+  - Tipo de servidor: Internet Site
+  - Nombre del sistema: mail.midominio.local
+
+======================================================================
+3. **CONFIGURAR /etc/mailname**
+======================================================================
+sudo nano /etc/mailname
+Contenido:
+mail.midominio.local
+
+======================================================================
+4. **CONFIGURAR POSTFIX PARA USAR TLS**
+======================================================================
+Crear certificado autofirmado:
+
+sudo openssl req -new -x509 -days 3650 -nodes   -out /etc/ssl/certs/mail.cert.pem   -keyout /etc/ssl/private/mail.key.pem   -subj "/C=DO/ST=SantoDomingo/L=SantoDomingo/O=ITLA/OU=ITLA/CN=mail.midominio.local"
+
+Permisos:
+sudo chmod 600 /etc/ssl/private/mail.key.pem
+
+Configurar Postfix:
+sudo nano /etc/postfix/main.cf
+
+Añadir / corregir:
+myhostname = mail.midominio.local
+myorigin = mail.midominio.local
+mydestination = $myhostname, localhost.localdomain, localhost
+home_mailbox = Maildir/
+
+smtpd_tls_cert_file=/etc/ssl/certs/mail.cert.pem
+smtpd_tls_key_file=/etc/ssl/private/mail.key.pem
+smtpd_use_tls=yes
+smtpd_tls_security_level = may
+
+Habilitar autenticación:
+smtpd_sasl_type = dovecot
+smtpd_sasl_path = private/auth
+smtpd_sasl_auth_enable = yes
+smtpd_sasl_security_options = noanonymous
+
+Puerto 587:
+sudo nano /etc/postfix/master.cf
+
+Descomentar:
+submission inet n — — — — smtpd
+
+y añadir:
+  -o smtpd_tls_security_level=encrypt
+  -o smtpd_sasl_auth_enable=yes
+  -o smtpd_recipient_restrictions=permit_sasl_authenticated,reject
+
+Aplicar:
+sudo systemctl restart postfix
+
+======================================================================
+5. **CREAR USUARIO LOCAL PARA CORREO**
+======================================================================
+sudo adduser prueba
+
+Contraseña usada en pruebas: Windows731
+
+======================================================================
+6. **CONFIGURAR DOVECOT**
+======================================================================
+Editar /etc/dovecot/conf.d/10-mail.conf:
+sudo nano /etc/dovecot/conf.d/10-mail.conf
+
+Asegurarse de:
+mail_location = maildir:~/Maildir
+
+Editar /etc/dovecot/conf.d/10-auth.conf:
+sudo nano /etc/dovecot/conf.d/10-auth.conf
+
+Cambiar:
+disable_plaintext_auth = yes
+auth_mechanisms = plain login
+
+Habilitar socket de autenticación para Postfix:
+sudo nano /etc/dovecot/conf.d/10-master.conf
+
+Buscar service auth { … } y poner:
+
+unix_listener /var/spool/postfix/private/auth {
+  mode = 0660
+  user = postfix
+  group = postfix
+}
+
+Configurar certificados en Dovecot:
+sudo nano /etc/dovecot/conf.d/10-ssl.conf
+
+ssl = required
+ssl_cert = </etc/ssl/certs/mail.cert.pem
+ssl_key = </etc/ssl/private/mail.key.pem
+
+Reiniciar:
+sudo systemctl restart dovecot
+
+======================================================================
+7. **VERIFICAR QUE MAILDIR FUNCIONA**
+======================================================================
+Enviar correo de prueba con swaks (funcional):
+
+swaks --to prueba@mail.midominio.local   --from prueba@mail.midominio.local   --server localhost   --port 587   --auth-user prueba   --auth-password Windows731   --tls
+
+Ver mensaje recibido:
+sudo ls -l /home/prueba/Maildir/new
+
+======================================================================
+8. **PRUEBA TLS IMAP/POP3**
+======================================================================
+IMAP 993:
+openssl s_client -connect localhost:993 -quiet
+
+POP3 995:
+openssl s_client -connect localhost:995 -quiet
+
+======================================================================
+9. **CONFIGURAR THUNDERBIRD**
+======================================================================
+Entrada (IMAP):
+Servidor: mail.midominio.local
+Puerto: 993
+Seguridad: SSL/TLS
+Autenticación: Contraseña normal
+Usuario: prueba
+
+Salida (SMTP):
+Servidor: mail.midominio.local
+Puerto: 587
+Seguridad: STARTTLS
+Autenticación: Contraseña normal
+Usuario: prueba
+
+Aceptar excepción de certificado autofirmado.
+
+======================================================================
+SERVIDOR LISTO Y FUNCIONAL EN RED LOCAL
+======================================================================

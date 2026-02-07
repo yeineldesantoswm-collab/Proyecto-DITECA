@@ -1,0 +1,63 @@
+Servidor RADIUS
+------------------------------------------------------------------------
+sudo apt-get install tasksel
+sudo tasksel (Instalar el servidor lamb si no lo tenemos)
+sudo apt-get install freeradius
+
+
+##Configurar usuarios##
+sudo nano /etc/freeradius
+(Vamos a la parte de abajo y agregamos las siguientes lineas despues del ultimo corchete)
+Sintaxis:
+       [nombre de usuario] Cleartext-Password := "[contrasena]"
+	       Reply-Message - "Hola Mundo"
+		   
+		   
+    EJ:  yeinel Cleartext-Password := "TngoSueno45"
+	     Reply-Message - "quiero dormir"
+		 
+(Se agregaran todos los usuarios necesarios dentro del archivo de configuracion)	
+
+sudo nano /etc/freeradius/3.0/clients.conf
+ 
+(Igual que en la anterior, despues de los corchetes)
+
+client 192.168.1.1 (IP Gateway) {
+       secret = (Contrasena que prefieras) {usaremos de ejemplo: SRug2021}
+	   shortname - FreeRadius - UG
+	   
+(Guardamos archivo y cerramos)
+
+sudo service freeradius start
+sudo service freeradius restart
+
+## Probaremos que este funcionando###
+
+[Sintaxis :: sudo radtest [nombre de usuario] [contrasena del usuario] [IP del cliente] [Puerto servidor radius] [Contrasena servicio radius] ]
+
+Ejemplo > sudo radtest yeinel TngoSueno45 192.168.1.1 1812 SRug2021
+##Debe mandar tres alertas iguales y si no existe ningun error, esta configurado correctamente##
+
+------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Siendo que la parte de configuracion la tenemos lista, para acceder a la configuracion de los AP, debemos poner una IP estatica dentro de la maquina por la conexion cableada.
+Entraremos a la configuracion de Red cableada y cambiaremos la IPv4 manteniendo el gateway, poniendo una IP dentro del rango y DNS 8.8.8.8
+
+-------------------------------------------------------------------------------------------------------------------------------------------------------
+
+##Para entrar al AP##
+Entramos a un navegador y ponemos nuestro gateway
+En el ejemplo de este caso tenemos el gateway 192.168.1.1
+##Ponemos las credenciales de nuestro enrutador##
+
+Si no tenemos ningun problema, deberiamos entrar a la parte de inalambrico > seguridad inalambrica > WPA/WPA2 Empresarial, Deshabilitando antes el WPS en caso de que este activada
+Colorcar:
+Version: WPA2
+Encriptacion: AES
+IP del servidor RADIUS: IP de la maquina en la que tenemos el servidor
+Puerto del Servidor RADIUS: 1812
+Contraseña del servidor RADIUS:SRug2021 (en este caso)
+(Se guarda esta configuracion)
+
+Configuracion terminada
+
