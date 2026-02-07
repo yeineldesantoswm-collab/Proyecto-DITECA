@@ -1,0 +1,652 @@
+##################################################################
+###### Comandos para ver la configuracion de los protocolos ######
+##################################################################
+
+! VTP y Vlans
+show vtp status
+show vtp devices
+show vtp password
+show vlan brief
+
+! HSRP
+show standby ! muestra información completa sobre todos los grupos HSRP configurados en todas las interfaces.
+show standby brief !  obtener un resumen rápido del estado de HSRP
+show standby [interface type number] [group] !  ver la configuración detallada de HSRP en una interfaz específica o grupo [Router# show standby interface GigabitEthernet 0/1]
+
+! Tengo que hacer el ssh en la romana y en Santiago tengo que 
+! Ajustar las ips estaticas para los SWs L2 y las excluded-address del mismo
+
+!==============
+!SANTO-DOMINGO |
+!==============
+
+enable
+configure terminal
+hostname SANTO-DOMINGO
+no ip domain-lookup
+
+! --- Configuraciones de Seguridad Global (SSH y Seguridad Básica) ---
+banner motd #
+******************************************************************
+!!! ADVERTENCIA: SOLO PERSONAL AUTORIZADO. ACCESO PROHIBIDO A TERCEROS !!!
+******************************************************************
+#
+enable secret diteca123!
+line console 0
+password diteca123!
+login
+exit
+service password-encryption
+
+ip domain-name diteca.com
+crypto key generate rsa modulus 2048
+username admin privilege 15 secret diteca123!
+line vty 0 4
+transport input ssh telnet
+login local
+exit
+
+
+! --- Configuración de Interfaces ---
+interface e0/0
+description CONEXIÓN A INTERNET
+ip address dhcp 
+no shutdown
+exit
+
+interface e0/1
+description CONECTADO A SWM-1 (Subred 10.128.4.0/30)
+ip address 10.128.4.1 255.255.255.252
+duplex full
+no shutdown
+exit
+
+interface e0/2
+description CONECTADO A SWM-2 (Subred 10.128.4.4/30)
+ip address 10.128.4.5 255.255.255.252
+duplex full
+no shutdown
+exit
+
+! --- Configuración de OSPF SANTO-DOMINGO ---
+
+router ospf 10
+router-id 1.1.1.1
+network 10.128.4.0 0.0.0.3 area 0
+network 10.128.4.4 0.0.0.3 area 0
+default-information originate always 
+
+
+! --- Comando final para guardar la configuración ---
+end
+copy running-config startup-config
+
+!==============
+! SWM-1  	  |
+!==============
+
+enable
+configure terminal
+hostname SWM-1
+no ip domain-lookup
+
+! --- Configuraciones de Seguridad Global ---
+
+banner motd #
+******************************************************************
+!!! ADVERTENCIA: SOLO PERSONAL AUTORIZADO. ACCESO PROHIBIDO A TERCEROS !!!
+******************************************************************
+#
+
+enable secret diteca123!
+line console 0
+password diteca123!
+login
+exit
+service password-encryption
+
+ip domain-name diteca.com
+crypto key generate rsa modulus 2048
+username admin privilege 15 secret diteca123!
+line vty 0 4
+transport input ssh telnet
+login local
+exit
+
+ip routing
+
+! --- Configuración de Interfaces y EtherChannel ---
+
+interface e0/3
+description CONECTADO A SANTO-DOMINGO
+no switchport
+ip address 10.128.4.2 255.255.255.252
+duplex full
+exit
+
+! EtherChannel
+interface range e0/0-2
+channel-group 1 mode active
+exit
+
+interface Port-channel 1
+description Enlace entre SWM-1 Y SWM-2
+switchport trunk encapsulation dot1q
+switchport mode trunk
+switchport trunk native vlan 777
+switchport trunk allowed vlan all
+exit
+
+! Haciendo los puertos trunkales
+interface range e1/0-2
+description Enlaces_Troncales SANTO-DOMINGO_SD-SW3_SD-SW4_SD-SW5
+switchport trunk encapsulation dot1q
+switchport mode trunk 
+switchport trunk native vlan 777
+switchport trunk allowed vlan all
+switchport nonegotiate
+exit
+
+! --- Configuración de VTP, VLANs y STP ---
+
+! Creacion del VTP server
+vtp version 2
+vtp mode server
+vtp domain DITECA
+vtp password admin123 
+
+! Creamos las vlans 
+vlan 10
+name Ventas
+vlan 20
+name Finanzas
+vlan 30 
+name RRHH
+vlan 100
+name Soporte/IT
+vlan 777 
+name NATIVA
+
+! STP (Primary)
+spanning-tree mode rapid-pvst
+spanning-tree vlan 1-1001 root primary
+
+! --- Configuración de HSRP ---
+
+interface vlan 10
+description Ventas 
+ip address 10.128.0.2 255.255.255.0
+standby version 2
+standby 10 ip 10.128.0.1
+standby 10 priority 150
+standby 10 preempt delay minimum 60
+no shutdown
+exit
+
+interface vlan 20
+description Finanzas 
+ip address 10.128.1.2 255.255.255.0
+standby version 2
+standby 20 ip 10.128.1.1
+standby 20 priority 150
+standby 20 preempt delay minimum 60
+no shutdown
+exit
+
+interface vlan 30
+description RRHH 
+ip address 10.128.2.2 255.255.255.0
+standby version 2
+standby 30 ip 10.128.2.1
+standby 30 priority 150
+standby 30 preempt delay minimum 60
+no shutdown
+exit
+
+interface vlan 100
+description Soporte/IT
+ip address 10.128.3.2 255.255.255.0
+standby version 2
+standby 40 ip 10.128.3.1
+standby 40 priority 150
+standby 40 preempt delay minimum 60
+no shutdown
+exit
+
+! --- Configuración de DHCP Pools SD-SW1 ---
+
+! Excluir direcciones de Gateway y HSRP virtual para todas las subredes antes de definir los pools
+ip dhcp excluded-address 10.128.0.1 10.128.0.2  
+ip dhcp excluded-address 10.128.1.1 10.128.1.2
+ip dhcp excluded-address 10.128.2.1 10.128.2.2
+ip dhcp excluded-address 10.128.3.1 10.128.3.10
+
+ip dhcp pool Ventas_SD-SW1
+network 10.128.0.0 255.255.255.0
+default-router 10.128.0.1
+dns-server 8.8.8.8
+domain-name diteca.com
+
+ip dhcp pool Finanzas_SD-SW1
+network 10.128.1.0 255.255.255.0
+default-router 10.128.1.1
+dns-server 8.8.8.8
+domain-name diteca.com
+
+ip dhcp pool RRHH_SD-SW1
+network 10.128.2.0 255.255.255.0
+default-router 10.128.2.1
+dns-server 8.8.8.8
+domain-name diteca.com
+
+ip dhcp pool Soporte_IT_SD-SW1
+network 10.128.3.0 255.255.255.0
+default-router 10.128.3.1
+dns-server 8.8.8.8
+domain-name diteca.com
+
+
+! --- Configuración de OSPF ---
+
+router ospf 10
+router-id 1.1.1.2
+network 10.128.4.0 0.0.0.3 area 0
+network 10.128.0.0 0.0.0.255 area 0
+network 10.128.1.0 0.0.0.255 area 0
+network 10.128.2.0 0.0.0.255 area 0
+network 10.128.3.0 0.0.0.255 area 0
+
+end
+copy running-config startup-config
+
+!==============
+!SWM-2   	  |
+!==============
+
+enable
+configure terminal
+hostname SWM-2
+no ip domain-lookup
+
+! --- Configuraciones de Seguridad Global ---
+
+banner motd #
+******************************************************************
+!!! ADVERTENCIA: SOLO PERSONAL AUTORIZADO. ACCESO PROHIBIDO A TERCEROS !!!
+******************************************************************
+#
+
+enable secret diteca123!
+line console 0
+password diteca123!
+login
+exit
+service password-encryption
+
+ip domain-name diteca.com
+crypto key generate rsa modulus 2048
+username admin privilege 15 secret diteca123!
+line vty 0 4
+transport input ssh telnet
+login local
+exit
+
+ip routing
+
+
+! --- Configuración de Interfaces y EtherChannel ---
+
+interface e0/3
+description CONECTADO A SANTO-DOMINGO
+no switchport
+ip address 10.128.4.4  255.255.255.252
+duplex full
+exit
+
+! EtherChannel
+interface range e0/0-2
+channel-group 1 mode active
+
+interface Port-channel 1
+switchport trunk encapsulation dot1q
+switchport mode trunk
+switchport trunk native vlan 777
+switchport trunk allowed vlan all
+exit
+
+! Haciendo los puertos trunkales
+interface range e1/0-2
+description Enlaces_Troncales SANTO-DOMINGO_SD-SW3_SD-SW4_SD-SW5
+switchport
+switchport trunk encapsulation dot1q
+switchport mode trunk 
+switchport trunk native vlan 777
+switchport trunk allowed vlan all
+switchport nonegotiate
+duplex full
+exit
+
+! --- Configuración de VTP, VLANs y STP ---
+
+! VTP (Client) - Las VLANs se aprenderan del SW1
+vtp version 2
+vtp mode client
+vtp domain DITECA
+vtp password admin123
+
+!STP (Secondary) 
+spanning-tree mode rapid-pvst
+spanning-tree vlan 1-1001 root secondary
+
+! --- Configuración de HSRP ---
+! Nota: Las interfaces VLAN deben crearse ANTES de configurar los pools DHCP.
+
+interface vlan 10
+description Ventas 
+ip address 10.128.0.3 255.255.255.0
+standby version 2
+standby 10 ip 10.128.0.1
+standby 10 preempt delay minimum 60
+no shutdown
+exit
+
+interface vlan 20
+description Finanzas 
+ip address 10.128.1.3 255.255.255.0
+standby version 2
+standby 20 ip 10.128.1.1
+standby 20 preempt delay minimum 60
+no shutdown
+exit
+
+interface vlan 30
+description RRHH 
+ip address 10.128.2.3 255.255.255.0
+standby version 2
+standby 30 ip 10.128.2.1
+standby 30 preempt delay minimum 60
+no shutdown
+exit
+
+interface vlan 100
+description Soporte/IT
+ip address 10.128.3.3 255.255.255.0
+standby version 2
+standby 40 ip 10.128.3.1
+standby 40 priority 150
+standby 40 preempt delay minimum 60
+no shutdown
+exit
+
+
+! --- Configuración de DHCP Pools SWM-2 ---
+! Corregido para usar las direcciones IP virtuales (HSRP IPs) como default-router
+
+! Pool Ventas (VLAN 10)
+ip dhcp excluded-address 10.128.0.1 10.128.0.10
+ip dhcp pool Ventas_SWM-2
+network 10.128.0.0 255.255.255.0
+default-router 10.128.0.1
+dns-server 8.8.8.8
+domain-name diteca.com
+exit
+
+! Pool Finanzas (VLAN 20)
+ip dhcp excluded-address 10.128.1.1 10.128.1.10
+ip dhcp pool Finanzas_SWM-2
+network 10.128.1.0 255.255.255.0
+default-router 10.128.1.1
+dns-server 8.8.8.8
+domain-name diteca.com
+exit
+
+! Pool RRHH (VLAN 30)
+ip dhcp excluded-address 10.128.2.1 10.128.2.10
+ip dhcp pool RRHH_SWM-2
+network 10.128.2.0 255.255.255.0
+default-router 10.128.2.1
+dns-server 8.8.8.8
+domain-name diteca.com
+exit
+
+! Pool Soporte/IT
+ip dhcp excluded-address 10.128.3.1 10.128.3.10
+ip dhcp pool Soporte_IT_SWM-2
+network 10.128.3.0 255.255.255.0
+default-router 10.128.3.1
+dns-server 8.8.8.8
+domain-name diteca.com
+exit
+
+! --- Configuración de OSPF ---
+
+router ospf 10
+router-id 1.1.1.3
+network 10.128.4.0 0.0.0.3 area 0
+network 10.128.0.0 0.0.0.255 area 0
+network 10.128.1.0 0.0.0.255 area 0
+network 10.128.2.0 0.0.0.255 area 0
+network 10.128.3.0 0.0.0.255 area 0
+
+end
+copy running-config startup-config
+
+
+!==============
+!SD-SW3        |
+!==============
+
+enable
+configure terminal
+hostname SD-SW3 
+no ip domain lookup
+
+! --- Configuraciones de Seguridad Global ---
+
+banner motd #
+******************************************************************
+!!! ADVERTENCIA: SOLO PERSONAL AUTORIZADO. ACCESO PROHIBIDO A TERCEROS !!!
+******************************************************************
+#
+
+enable secret diteca123!
+line console 0
+password diteca123!
+login
+exit
+service password-encryption
+
+ip domain-name diteca.com
+crypto key generate rsa modulus 2048
+username admin privilege 15 secret diteca123!
+line vty 0 4
+transport input ssh telnet
+login local
+exit
+
+! --- Configuración de VTP, STP e Interfaces ---
+
+!Configurando el VTP mode cliente
+vtp version 2
+vtp mode client
+vtp domain DITECA
+vtp password admin123 
+
+interface range e0/0-1
+switchport
+switchport trunk encapsulation dot1q
+switchport mode trunk 
+switchport trunk native vlan 777
+switchport trunk allowed vlan all
+switchport nonegotiate
+duplex full
+exit
+
+!STP
+spanning-tree mode rapid-pvst
+
+interface range e1/0-3, e2/0-3, e3/0-3
+description PUERTOS_VENTAS
+switchport mode access
+switchport access vlan 10
+spanning-tree portfast
+exit
+
+interface vlan 100
+ip address 10.128.3.4 255.255.255.0
+no shutdown
+exit
+ip default-gateway  10.128.3.1
+
+end
+write memory
+
+!==============
+!SD-SW4        | 
+!==============
+
+enable
+configure terminal
+hostname SD-SW4
+no ip domain lookup
+
+! --- Configuraciones de Seguridad Global ---
+
+banner motd #
+******************************************************************
+!!! ADVERTENCIA: SOLO PERSONAL AUTORIZADO. ACCESO PROHIBIDO A TERCEROS !!!
+******************************************************************
+#
+
+enable secret diteca123!
+line console 0
+password diteca123!
+login
+exit
+service password-encryption
+
+ip domain-name diteca.com
+crypto key generate rsa modulus 2048
+username admin privilege 15 secret diteca123!
+line vty 0 4
+transport input ssh telnet
+login local
+exit
+
+! --- Configuración de VTP, STP e Interfaces ---
+
+!Configurando el VTP mode cliente
+vtp version 2
+vtp mode client
+vtp domain DITECA
+vtp password admin123 
+
+! Puertos trunkales
+interface range e0/0-1
+switchport
+switchport trunk encapsulation dot1q
+switchport mode trunk 
+switchport trunk native vlan 777
+switchport trunk allowed vlan all
+switchport nonegotiate
+duplex full
+exit
+
+!STP
+spanning-tree mode rapid-pvst
+
+interface range e1/0-3, e2/0-3
+description PUERTOS_FINANZAS
+switchport mode access
+switchport access vlan 20
+spanning-tree portfast
+exit
+
+interface range e3/0-3
+description PUERTOS_RRHH
+switchport mode access
+switchport access vlan 30
+spanning-tree portfast
+exit
+
+interface vlan 100
+ip address 10.128.3.5 255.255.255.0
+no shutdown
+exit
+
+ip default-gateway 10.128.3.1
+
+end
+write memory
+
+!==============
+!SD-SW5        |
+!==============
+
+enable
+configure terminal
+hostname SD-SW5
+no ip domain lookup
+
+! --- Configuraciones de Seguridad Global ---
+
+banner motd #
+******************************************************************
+!!! ADVERTENCIA: SOLO PERSONAL AUTORIZADO. ACCESO PROHIBIDO A TERCEROS !!!
+******************************************************************
+#
+
+enable secret diteca123!
+line console 0
+password diteca123!
+login
+exit
+service password-encryption
+
+ip domain-name diteca.com
+crypto key generate rsa modulus 2048
+username admin privilege 15 secret diteca123!
+line vty 0 4
+transport input ssh telnet
+login local
+exit
+
+
+! --- Configuración de VTP, STP e Interfaces ---
+
+!Configurando el VTP mode cliente
+vtp version 2
+vtp mode client
+vtp domain DITECA
+vtp password admin123 
+
+! Puertos trunkales
+interface range e0/0-1
+switchport
+switchport trunk encapsulation dot1q
+switchport mode trunk 
+switchport trunk native vlan 777
+switchport trunk allowed vlan all
+switchport nonegotiate
+duplex full
+exit
+
+!STP
+spanning-tree mode rapid-pvst
+
+interface range e1/0-3, e2/0-3, e3/0-3
+description PUERTOS_SOPORTE-TI
+switchport mode access
+switchport access vlan 100
+spanning-tree portfast
+exit
+
+interface vlan 100
+ip address 10.128.3.6 255.255.255.0
+no shutdown
+exit
+
+ip default-gateway 10.128.3.1
+
+endshow
+write memory

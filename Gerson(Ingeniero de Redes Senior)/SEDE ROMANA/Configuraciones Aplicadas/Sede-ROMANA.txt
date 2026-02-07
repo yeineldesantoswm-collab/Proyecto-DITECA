@@ -1,0 +1,311 @@
+###############
+## ROMANA   ###
+###############
+
+enable
+configure terminal
+hostname ROMANA
+no ip domain-lookup
+
+! --- Configuraciones de Seguridad Global (SSH y Seguridad Básica) ---
+banner motd #
+******************************************************************
+!!! ADVERTENCIA: SOLO PERSONAL AUTORIZADO. ACCESO PROHIBIDO A TERCEROS !!!
+******************************************************************
+#
+enable secret diteca123!
+line console 0
+password diteca123!
+login
+exit
+service password-encryption
+
+ip domain-name diteca.com
+crypto key generate rsa modulus 2048
+username admin privilege 15 secret diteca123!
+line vty 0 4
+transport input ssh telnet
+login local
+exit
+
+
+interface e0/0
+description CONEXIÓN A INTERNET
+ip address dhcp 
+duplex full
+no shutdown
+exit
+
+interface e0/1
+description RED_ROMANA
+duplex full
+no shutdown
+exit
+
+interface e0/1.10
+description Contabilidad
+encapsulation dot1q 10
+ip address 10.144.0.1 255.255.255.128
+exit
+
+interface e0/1.20
+description Legal
+encapsulation dot1q 20
+ip address 10.144.0.129 255.255.255.192
+exit
+
+interface e0/1.100
+description SOPORTE/IT
+encapsulation dot1q 100
+ip address 10.144.0.193 255.255.255.224
+exit
+
+interface e0/1.777
+description NATIVA
+encapsulation dot1q 777 native ! Esta no lleva ip porque es la nativa
+exit
+
+ ! DHCP
+
+! se excluyeron las primeras 10 
+ip dhcp excluded-address 10.144.0.1 10.144.0.10
+ip dhcp pool Contabilidad
+network 10.144.0.0  255.255.255.128
+default-router 10.144.0.1
+dns-server 8.8.8.8
+domain-name diteca.com
+exit
+
+! SOPORTE/IT  se excluiran las primera 3
+ip dhcp excluded-address  10.144.0.193 10.144.0.195
+ip dhcp pool SOPORTE/IT
+network  10.144.0.192 255.255.255.224
+default-router 10.144.0.193
+dns-server 8.8.8.8
+domain-name diteca.com
+exit
+
+! LEGAL se excluiran Las primeras 6
+ip dhcp excluded-address 10.144.0.129 10.144.0.135
+ip dhcp pool Legal
+network 10.144.0.128 255.255.255.192
+default-router 10.144.0.129
+dns-server 8.8.8.8
+domain-name diteca.com
+exit
+
+! OSPF
+
+router ospf 10
+router-id 1.1.1.4
+! FALTA PUBLICAR LAS IPS
+
+
+#################
+###### RM-SW7 ###
+#################
+
+enable
+configure terminal
+hostname RM-SW7
+no ip domain-lookup
+
+
+! --- Configuraciones de Seguridad Global ---
+
+! --- Configuraciones de Seguridad Global (SSH y Seguridad Básica) ---
+banner motd #
+******************************************************************
+!!! ADVERTENCIA: SOLO PERSONAL AUTORIZADO. ACCESO PROHIBIDO A TERCEROS !!!
+******************************************************************
+#
+enable secret diteca123!
+line console 0
+password diteca123!
+login
+exit
+service password-encryption
+
+ip domain-name diteca.com
+crypto key generate rsa modulus 2048
+username admin privilege 15 secret diteca123!
+line vty 0 4
+transport input ssh telnet
+login local
+exit
+
+! Creacion del VTP server
+
+vtp version 2
+vtp mode server
+vtp domain DITECA
+vtp password admin123 
+
+! Creacion de las vlans  
+! Analizar de las vlans de administracion
+
+vlan 10
+name Contabilidad
+vlan 20
+name legal 
+vlan 100
+name SOPORTE/IT
+vlan 777
+name NATIVA
+
+!  EtherChannel
+interface Port-channel 1
+exit
+
+interface range e0/1-3
+channel-group 1 mode active
+no shutdown
+exit
+
+int Port-channel 1
+sw trunk encapsulation dot1q 
+sw mode trunk
+sw trunk native vlan 777
+sw trunk allowed vlan all
+no shutdown
+exit
+
+! Puerto conectado al route trunk
+
+interface e0/0
+description CONEXIÓN AL ROUTER-ROMANA
+switchport trunk encapsulation dot1q
+switchport mode trunk
+switchport trunk native vlan 777
+switchport trunk allowed vlan all
+exit
+
+!  STP (root primary)
+spanning-tree mode rapid-pvst
+spanning-tree vlan 1-1001 root primary
+
+
+! Puertos de acceso
+
+interface range e1/0-3
+description Contabilidad
+switchport mode access
+switchport access vlan 10
+spanning-tree portfast
+exit
+
+interface range e2/0-3
+description legal
+switchport mode access
+switchport access vlan 20
+spanning-tree portfast
+exit
+
+interface range e3/0-3
+description SOPORTE/IT
+switchport mode access
+switchport access vlan 100
+spanning-tree portfast
+exit
+
+
+interface vlan 100
+ip address 10.144.0.194 255.255.255.224
+no shutdown
+exit
+
+ip default-gateway  10.144.0.193
+
+end 
+wr
+
+#################
+###### RM-SW8 ######
+#################
+
+enable
+configure terminal
+hostname RM-SW8
+no ip domain-lookup
+
+
+! --- Configuraciones de Seguridad Global ---
+
+! --- Configuraciones de Seguridad Global (SSH y Seguridad Básica) ---
+banner motd #
+******************************************************************
+!!! ADVERTENCIA: SOLO PERSONAL AUTORIZADO. ACCESO PROHIBIDO A TERCEROS !!!
+******************************************************************
+#
+enable secret diteca123!
+line console 0
+password diteca123!
+login
+exit
+service password-encryption
+
+ip domain-name diteca.com
+crypto key generate rsa modulus 2048
+username admin privilege 15 secret diteca123!
+line vty 0 4
+transport input ssh telnet
+login local
+exit
+! Creacion del VTP server
+
+vtp version 2
+vtp mode client
+vtp domain DITECA
+vtp password admin123 
+
+!  EtherChannel
+interface Port-channel 1
+no shutdown
+exit
+
+interface range e0/0-2
+channel-group 1 mode active
+no shutdown
+exit
+
+int Port-channel 1
+sw trunk encapsulation dot1q 
+sw mode trunk
+sw trunk native vlan 777
+sw trunk allowed vlan all
+no shutdown
+exit
+
+!STP (Secondary) 
+spanning-tree mode rapid-pvst
+spanning-tree vlan 1-1001 root secondary
+
+interface range e1/0-3
+description Contabilidad
+switchport mode access
+switchport access vlan 10
+spanning-tree portfast
+exit
+
+interface range e2/0-3
+description legal
+switchport mode access
+switchport access vlan 20
+spanning-tree portfast
+exit
+
+interface range e3/0-3
+description SOPORTE/IT
+switchport mode access
+switchport access vlan 100
+spanning-tree portfast
+exit
+
+interface vlan 100
+ip address 10.144.0.195 255.255.255.227
+no shutdown
+exit
+ip default-gateway  10.144.0.193
+
+end 
+wr

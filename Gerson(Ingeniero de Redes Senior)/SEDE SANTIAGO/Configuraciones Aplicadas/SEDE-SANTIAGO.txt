@@ -1,0 +1,178 @@
+! IP DEL WINDOWS SERVER ES LA 10.160.0.66 /26 Este va a hacer el server DHCP
+! IP DEL SERVIDOR LINUX ES LA 10.160.0.67 /26
+! lAS IPs excuidas son: 
+! ip dhcp excluded-address 10.160.0.65 10.160.0.67
+! ip dhcp excluded-address 10.160.0.129 10.160.0.130 ip del sw de admistracion
+
+ ! sudo ip addr add 10.128.2.196/28 dev eth0
+ ! Puerta de enlace
+ ! sudo ip route add default via 10.128.2.193 dev eth0
+
+ ! redes de los departamentos
+10.160.0.0 255.255.255.192 Ventas - vlan 10
+10.160.0.64 255.255.255.192  Centro_de_datos 220
+10.160.0.128 255.255.255.192  Soporte/TI 100
+vlan native 777
+
+  
+#####################
+##### SANTIAGO ######
+#####################
+
+enable
+configure terminal
+hostname Router-SANTIAGO
+
+! --- Configuraciones de Seguridad Global (SSH y Seguridad Básica) ---
+banner motd #
+******************************************************************
+!!! ADVERTENCIA: SOLO PERSONAL AUTORIZADO. ACCESO PROHIBIDO A TERCEROS !!!
+******************************************************************
+#
+enable secret diteca123!
+line console 0
+password diteca123!
+login
+exit
+service password-encryption
+
+ip domain-name diteca.com
+crypto key generate rsa modulus 2048
+username admin privilege 15 secret diteca123!
+line vty 0 4
+transport input ssh telnet
+login local
+exit
+
+interface e0/0
+description CONEXIÓN A INTERNET
+ip address dhcp 
+no shutdown
+exit
+
+interface e0/1
+description RED_SANTIAGO
+no shutdown
+exit
+
+interface e0/1.10
+description Ventas
+ip helper-address 10.160.0.67
+encapsulation dot1q 10
+ip address 10.160.0.1 255.255.255.192
+exit
+ 
+interface e0/1.220
+description Centro_de_datos
+ip helper-address 10.160.0.67
+encapsulation dot1q 220
+ip address 10.160.0.65 255.255.255.192
+exit
+ 
+interface e0/1.100
+description Soporte/TI
+ip helper-address 10.160.0.67
+encapsulation dot1q 100
+ip address 10.160.0.129 255.255.255.192
+exit
+
+interface e0/1.777
+description NATIVE
+encapsulation dot1q 777
+exit
+
+router ospf 10
+router-id 1.1.1.5
+
+
+
+################
+##### SW9 ######
+################
+
+enable
+configure terminal
+hostname SW9
+no ip domain-lookup
+
+! --- Configuraciones de Seguridad Global ---
+
+! --- Configuraciones de Seguridad Global (SSH y Seguridad Básica) ---
+banner motd #
+******************************************************************
+!!! ADVERTENCIA: SOLO PERSONAL AUTORIZADO. ACCESO PROHIBIDO A TERCEROS !!!
+******************************************************************
+#
+enable secret diteca123!
+line console 0
+password diteca123!
+login
+exit
+service password-encryption
+
+ip domain-name diteca.com
+crypto key generate rsa modulus 2048
+username admin privilege 15 secret diteca123!
+line vty 0 4
+transport input ssh telnet
+login local
+exit
+
+! Creacion de las Vlan 
+
+vlan 10
+name Ventas
+vlan 220
+name Centro_de_Datos/servidores
+vlan 100
+name Soporte/TI
+vlan 777 
+name NATIVE
+
+! Puerto conectado al route trunk
+
+interface e0/0
+description CONEXIÓN AL ROUTER-ROMANA
+switchport trunk encapsulation dot1q
+switchport mode trunk
+switchport trunk native vlan 777
+switchport trunk allowed vlan all
+exit
+
+!  STP (root primary)
+spanning-tree mode rapid-pvst
+spanning-tree vlan 1-1001 root primary
+
+
+! Puertos de acceso
+
+interface range e1/0-3
+description Ventas
+switchport mode access
+switchport access vlan 10
+spanning-tree portfast
+exit
+
+interface range e2/0-3
+description Centro_de_Datos/servidores
+switchport mode access
+switchport access vlan 220
+spanning-tree portfast
+exit
+
+interface range e3/0-3
+description Soporte/TI
+switchport mode access
+switchport access vlan 100
+spanning-tree portfast
+exit
+
+interface vlan 100
+ip address 10.160.0.130 255.255.255.192
+no shutdown
+exit
+
+ip default-gateway  10.160.0.129
+
+end
+wr
