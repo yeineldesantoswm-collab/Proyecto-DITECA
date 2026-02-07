@@ -1,0 +1,19 @@
+!OSPF – Router de Romana
+conf t
+hostname ROMANA
+
+router ospf 1
+router-id 3.3.3.3
+
+! Red pública del ISP para Romana
+network 128.0.0.16 0.0.0.15 area 0
+
+! ===== Redes internas de Romana (EDITAR) =====
+! Ejemplo:
+! network 10.130.0.0 0.0.255.255 area 0
+! network 10.130.1.0 0.0.0.255 area 0
+! network 10.130.2.0 0.0.0.255 area 0
+
+exit
+end
+write memory

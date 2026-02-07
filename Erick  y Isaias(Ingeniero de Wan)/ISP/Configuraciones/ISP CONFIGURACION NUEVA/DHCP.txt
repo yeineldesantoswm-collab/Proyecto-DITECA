@@ -1,0 +1,24 @@
+ip dhcp excluded-address 128.0.0.1
+ip dhcp excluded-address 128.0.0.9
+ip dhcp excluded-address 128.0.0.13
+
+ip dhcp pool SANTO_DOMINGO
+ network 128.0.0.0 255.255.255.248
+ default-router 128.0.0.1
+ dns-server 8.8.8.8
+ domain-name DITECA.local
+ lease 1
+
+ip dhcp pool ROMANA
+ network 128.0.0.8 255.255.255.252
+ default-router 128.0.0.9
+ dns-server 8.8.8.8
+ domain-name DITECA.local
+ lease 1
+
+ip dhcp pool SANTIAGO
+ network 128.0.0.12 255.255.255.252
+ default-router 128.0.0.13
+ dns-server 8.8.8.8
+ domain-name DITECA.local
+ lease 1

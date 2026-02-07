@@ -1,0 +1,19 @@
+OSPF – Router de Santiago
+conf t
+hostname SANTIAGO
+
+router ospf 1
+router-id 4.4.4.4
+
+! Red pública del ISP para Santiago
+network 128.0.0.32 0.0.0.15 area 0
+
+! ===== Redes internas de Santiago (EDITAR) =====
+! Ejemplo:
+! network 10.129.0.0 0.0.255.255 area 0
+! network 10.129.1.0 0.0.0.255 area 0
+! network 10.129.2.0 0.0.0.255 area 0
+
+exit
+end
+write memory

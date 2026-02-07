@@ -1,0 +1,16 @@
+hostname ISP
+
+interface Ethernet0/0
+ description Enlace-a-SANTO-DOMINGO
+ ip address 128.0.0.2 255.255.255.248
+ no shutdown
+
+interface Ethernet0/1
+ description Enlace-a-SANTIAGO
+ ip address 128.0.0.14 255.255.255.252
+ no shutdown
+
+interface Ethernet0/2
+ description Enlace-a-ROMANA
+ ip address 128.0.0.10 255.255.255.252
+ no shutdown

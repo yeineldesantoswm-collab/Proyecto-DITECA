@@ -1,0 +1,5 @@
+router ospf 1
+router-id 3.3.3.3
+
+! WAN + LAN /30
+network 128.0.0.8 0.0.0.3 area 0

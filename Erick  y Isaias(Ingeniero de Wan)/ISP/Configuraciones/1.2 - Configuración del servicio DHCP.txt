@@ -1,0 +1,23 @@
+! Excluir las IPs que serán gateways y cualquier IP estática
+ip dhcp excluded-address 128.0.0.1 ! ISP principal
+ip dhcp excluded-address 128.0.0.17 ! gateway subred Santiago
+ip dhcp excluded-address 128.0.0.33! gateway subred Romana
+ip dhcp excluded-address 128.0.0.49 ! Uso Reservado
+
+ip dhcp pool POOL-R-CORE
+network 128.0.0.0 255.255.255.240
+default-router 128.0.0.1
+dns-server 8.8.8.8
+domain-name diteca.com
+
+ip dhcp pool POOL-SANTIAGO
+network 128.0.0.16 255.255.255.240
+default-router 128.0.0.17
+dns-server 8.8.8.8
+domain-name diteca.com
+
+ip dhcp pool POOL-ROMANA
+network 128.0.0.32 255.255.255.240
+default-router 128.0.0.33
+dns-server 8.8.8.8
+domain-name diteca.com 

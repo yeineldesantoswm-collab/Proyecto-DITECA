@@ -1,0 +1,12 @@
+ 1.5 – Rutas estáticas de salida a Internet (versión final con next-hop)
+SANTO_DOMINGO (R-CORE)
+! Ruta por defecto hacia Internet (ISP Santo Domingo)
+ip route 0.0.0.0 0.0.0.0 128.0.0.1
+
+ROMANA
+! Ruta por defecto hacia Internet (ISP Romana)
+ip route 0.0.0.0 0.0.0.0 128.0.0.9
+
+SANTIAGO
+! Ruta por defecto hacia Internet (ISP Santiago)
+ip route 0.0.0.0 0.0.0.0 128.0.0.13

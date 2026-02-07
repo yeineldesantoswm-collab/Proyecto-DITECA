@@ -1,0 +1,5 @@
+router ospf 1
+router-id 4.4.4.4
+
+! WAN + LAN
+network 128.0.0.12 0.0.0.3 area 0

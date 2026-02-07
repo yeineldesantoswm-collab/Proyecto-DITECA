@@ -1,0 +1,75 @@
+1.4
+!SEDE PRINCIPAL – R-CORE (SANTO DOMINGO)
+
+Red privada completa: 10.128.0.0/12
+Wildcard: 0.15.255.255
+
+!Tráfico SD ↔ SANTIAGO
+
+Santiago red privada: 10.160.0.0/12
+Wildcard: 0.15.255.255
+
+ip access-list extended VPN-SD-SG
+permit ip 10.128.0.0 0.15.255.255 10.160.0.0 0.15.255.255
+
+!Tráfico SD ↔ ROMANA
+
+Romana red privada: 10.144.0.0/12
+Wildcard: 0.15.255.255
+
+ip access-list extended VPN-SD-RM
+permit ip 10.128.0.0 0.15.255.255 10.144.0.0 0.15.255.255
+
+!Aplicar ACLs al crypto map
+crypto map CM-VPN 10 ipsec-isakmp
+set peer <IP_PUBLICA_SANTIAGO>
+match address VPN-SD-SG
+set transform-set TS-VPN
+
+crypto map CM-VPN 20 ipsec-isakmp
+set peer <IP_PUBLICA_ROMANA>
+match address VPN-SD-RM
+set transform-set TS-VPN
+
+interface e0/0
+crypto map CM-VPN
+
+!SEDE SANTIAGO
+
+Red privada completa: 10.160.0.0/12
+Wildcard: 0.15.255.255
+
+!Santiago ↔ Santo Domingo
+ip access-list extended VPN-SG-SD
+permit ip 10.160.0.0 0.15.255.255 10.128.0.0 0.15.255.255
+
+
+!Aplicación al crypto map:
+
+crypto map CM-VPN 10 ipsec-isakmp
+set peer <IP_PUBLICA_SD>
+match address VPN-SG-SD
+set transform-set TS-VPN
+
+interface e0/0
+crypto map CM-VPN
+
+!SEDE ROMANA
+
+Red privada completa: 10.144.0.0/12
+Wildcard: 0.15.255.255
+
+!Romana ↔ Santo Domingo
+ip access-list extended VPN-RM-SD
+permit ip 10.144.0.0 0.15.255.255 10.128.0.0 0.15.255.255
+
+
+!Aplicación al crypto map:
+
+crypto map CM-VPN 10 ipsec-isakmp
+set peer <IP_PUBLICA_SD>
+match address VPN-RM-SD
+set transform-set TS-VPN
+
+interface e0/0
+crypto map CM-VPN

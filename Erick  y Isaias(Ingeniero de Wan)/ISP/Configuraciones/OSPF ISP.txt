@@ -1,0 +1,23 @@
+conf t
+hostname ISP
+
+router ospf 1
+router-id 1.1.1.1
+
+! Red pública para Santo Domingo
+network 128.0.0.0 0.0.0.15 area 0
+
+! Red pública para Romana
+network 128.0.0.16 0.0.0.15 area 0
+
+! Red pública para Santiago
+network 128.0.0.32 0.0.0.15 area 0
+
+! Enlace del ISP hacia Internet / core (modifica según tu red real)
+! Ejemplo de red /30 (cámbiala si tu interfaz e0/2 tiene otra IP)
+network 209.165.200.0 0.0.0.3 area 0
+
+exit
+end
+write memory
+

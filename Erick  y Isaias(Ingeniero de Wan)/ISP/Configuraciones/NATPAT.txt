@@ -1,0 +1,41 @@
+conf t
+! Enlaces hacia cada sede (INSIDE)
+interface e0/0
+description Sto-Dgo Public LAN
+ip nat inside
+exit
+
+interface e0/1
+description Romana Public LAN
+ip nat inside
+exit
+
+interface e0/3
+description Santiago Public LAN
+ip nat inside
+exit
+
+! Enlace a Internet / núcleo ISP (OUTSIDE)
+interface e0/2
+ description Link-to-Internet
+ ip nat outside
+ exit
+
+! 2. Crear los POOLS de direcciones públicas
+
+! --- Pool para Santo Domingo (128.0.0.0/28) 
+ip nat pool STO-DGO-POOL 128.0.0.2 128.0.0.14 netmask 255.255.255.240
+
+! --- Pool para ROMANA (128.0.0.16/28) 
+ip nat pool ROMANA-POOL 128.0.0.18 128.0.0.30 netmask 255.255.255.240
+
+! --- Pool para SANTIAGO (128.0.0.32/28) 
+ip nat pool SANTIAGO-POOL 128.0.0.34 128.0.0.46 netmask 255.255.255.240
+
+ip nat inside source list 10 pool STO-DGO-POOL overload
+ip nat inside source list 11 pool ROMANA-POOL overload
+ip nat inside source list 12 pool SANTIAGO-POOL overload
+
+
+end
+write memory

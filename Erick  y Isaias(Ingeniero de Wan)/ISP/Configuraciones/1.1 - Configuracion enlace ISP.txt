@@ -1,0 +1,25 @@
+##################################
+! Interfaz pública del ISP
+##################################
+enable
+configure terminal
+hostname ISP
+
+interface e0/0
+description CONEXIÓN A STO-DGO
+ip address 128.0.0.1 255.255.255.248
+no shutdown
+exit
+
+interface e0/1
+description CONEXIÓN A ROMANA
+ip address  128.0.0.9 255.255.255.252
+no shutdown
+exit
+
+
+interface e0/3
+description CONEXIÓN A SANTIAGO
+ip address  128.0.0.13 255.255.255.252
+no shutdown
+exit

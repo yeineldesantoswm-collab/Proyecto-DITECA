@@ -1,0 +1,24 @@
+conf t
+!
+interface g0/0
+ ip nat inside
+!
+interface g0/1
+ ip nat inside
+!
+interface g0/2
+ ip nat inside
+!
+! Marcar la interfaz OUTSIDE (Internet)
+interface g0/3
+ ip nat outside
+!
+! ACL 
+access-list 1 permit 10.128.0.0 0.15.255.255     ! Santo Domingo /12
+access-list 1 permit 10.144.0.0 0.15.255.255     ! La Romana /12
+access-list 1 permit 10.160.0.0 0.15.255.255     ! Santiago /12
+!
+! NAT PAT usando la IP pública de la interfaz g0/3
+ip nat inside source list 1 interface g0/3 overload
+!
+end

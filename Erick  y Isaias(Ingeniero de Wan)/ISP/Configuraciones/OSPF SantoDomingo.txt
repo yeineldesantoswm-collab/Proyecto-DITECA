@@ -1,0 +1,18 @@
+conf t
+hostname R-CORE
+
+router ospf 1
+router-id 2.2.2.2
+
+! Red pública conectada al ISP
+network 128.0.0.0 0.0.0.15 area 0
+
+! ===== Redes internas de Santo Domingo (EDITAR según tus LAN) =====
+! Ejemplo:
+! network 10.128.0.0 0.0.255.255 area 0
+! network 10.128.1.0 0.0.0.255 area 0
+! network 10.128.2.0 0.0.0.255 area 0
+
+exit
+end
+write memory
